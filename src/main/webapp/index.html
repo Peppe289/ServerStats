@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="black"/>
+
+
+    <title>Server Stats</title>
+
+    <style>
+        body {
+            width: 100%;
+            margin: 0 auto;
+            height: 100vh;
+            background-color: #151515;
+        }
+
+        h1#title {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 3em;
+        }
+
+        * {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        div#server-stats {
+            margin: 0 auto;
+            width: 80%;
+            height: 80%;
+            background-color: rgba(126, 126, 126, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(50px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(220, 220, 220, 0.3);
+        }
+
+        .skill {
+            width: 160px;
+            height: 160px;
+            position: relative;
+            margin: auto 30px;
+        }
+
+        .outer {
+            height: 160px;
+            width: 160px;
+            padding: 20px;
+            box-shadow: 6px 6px 10px -1px rgba(255, 255, 255, 0.15), -6px -6px 10px -1px rgba(21, 21, 21, 0.7);
+            border-radius: 50%;
+        }
+
+        .inner {
+            height: 120px;
+            width: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 4px 4px 6px -1px rgba(255, 255, 255, 0.2), inset -4px -4px 6px -1px rgba(21, 21, 21, 0.7),
+            -0.5px -0.5px 0 rgba(255, 255, 255, 0.1), 0.5px 0.5px 0 rgba(21, 21, 21, 0.15), 0 12px 10px -10px rgba(0, 0, 0, 0.05);
+            border-radius: 50%;
+        }
+
+        .number {
+            font-weight: 600;
+            font-size: 30px;
+        }
+
+        #cpuStats circle {
+            stroke: url(#GradientColorCPU);
+        }
+
+        #ramStats circle {
+            stroke: url(#GradientColorRAM);
+        }
+
+        #diskStats circle {
+            stroke: url(#GradientColorDisk);
+        }
+
+        circle {
+            fill: none;
+            stroke-width: 20px;
+            stroke-dasharray: 450;
+            stroke-dashoffset: 450;
+        }
+
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+    </style>
+
+</head>
+<body>
+<h1 id="title">Server Stats</h1>
+
+<div id="server-stats">
+
+    <div id="cpuStats" class="skill">
+        <div class="outer">
+            <div class="inner">
+                <div class="number">
+
+                </div>
+            </div>
+        </div>
+
+        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="160px" height="160px">
+            <defs>
+                <linearGradient id="GradientColorCPU">
+                    <stop offset="0%" stop-color="#c700b9"/>
+                    <stop offset="100%" stop-color="#8600fb"/>
+                </linearGradient>
+            </defs>
+            <circle cx="80" cy="80" r="70" stroke-linecap="round"/>
+        </svg>
+    </div>
+
+    <div id="ramStats" class="skill">
+        <div class="outer">
+            <div class="inner">
+                <div class="number">
+
+                </div>
+            </div>
+        </div>
+
+        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="160px" height="160px">
+            <defs>
+                <linearGradient id="GradientColorRAM">
+                    <stop offset="0%" stop-color="#298dc1"/>
+                    <stop offset="100%" stop-color="#53ee3a"/>
+                </linearGradient>
+            </defs>
+            <circle cx="80" cy="80" r="70" stroke-linecap="round"/>
+        </svg>
+    </div>
+
+    <div id="diskStats" class="skill">
+        <div class="outer">
+            <div class="inner">
+                <div class="number">
+
+                </div>
+            </div>
+        </div>
+
+        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="160px" height="160px">
+            <defs>
+                <linearGradient id="GradientColorDisk">
+                    <stop offset="0%" stop-color="#c4d700"/>
+                    <stop offset="100%" stop-color="#da8e00"/>
+                </linearGradient>
+            </defs>
+            <circle cx="80" cy="80" r="70" stroke-linecap="round"/>
+        </svg>
+    </div>
+
+</div>
+
+</body>
+
+<script>
+    let oldValueList = {
+        cpuStats: 0,
+        ramStats: 0,
+        diskStats: 0
+    };
+
+    function updateState(reason, target) {
+        let counter = 0;
+        let offset;
+        let oldValue = oldValueList[reason];
+        const cpuStats = document.getElementById(reason);
+        const cpuStatsNumber = cpuStats.querySelector(".number");
+        const circle = cpuStats.querySelector("circle");
+
+        // check for integrity value
+        target = target > 100 ? 100 : target < 0 ? 0 : target;
+
+        cpuStatsNumber.innerHTML = target + "%";
+
+        counter = oldValue;
+
+        function updateAnimation()
+        {
+            if (counter === target) {
+                // at finish animation, save this target for next animation on this div.
+                oldValueList[reason] = target;
+                return;
+            }
+
+            // check if is needed decrease or increase. (bcs we save older value)
+            counter = counter < target ? counter += 2 : counter -= 2;
+
+            // check right range of value
+            if ((counter > target && oldValue < target) || (counter < target && oldValue > target)) {
+                counter = target;
+            }
+
+            // change offset when iterate value.
+            offset = 450 - 450 * (counter / 100);
+            circle.style.strokeDashoffset = offset.toString();
+
+            requestAnimationFrame(updateAnimation);
+        }
+
+        updateAnimation();
+    }
+
+    updateState("cpuStats", 76);
+    updateState("ramStats", 45);
+    updateState("diskStats", 30);
+</script>
+
+</html>
