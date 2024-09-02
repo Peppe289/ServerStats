@@ -28,7 +28,7 @@ public class AjaxInfoInterface extends HttpServlet {
         objectMapper = new ObjectMapper();
     }
 
-    private HashMap<String, Object> newHandler() {
+    private HashMap<String, Object> handlerOther() {
         SystemInfo si = new SystemInfo();
         HardwareAbstractionLayer hal = si.getHardware();
         OperatingSystem os = si.getOperatingSystem();
@@ -46,54 +46,15 @@ public class AjaxInfoInterface extends HttpServlet {
 
     }
 
-    private HashMap<String, Object> handler() throws InterruptedException {
+    private HashMap<String, Object> handlerMain() {
         SystemInfo si = new SystemInfo();
         HardwareAbstractionLayer hal = si.getHardware();
-        OperatingSystem os = si.getOperatingSystem();
-        // info data
-        List<DiskInfo> diskList = new ArrayList<>();
-        List<NetWorkInfo> netWorkInfo = new ArrayList<>();
+        RetrieveInformation retrieveInformation = new RetrieveInformation();
 
         HashMap<String, Object> result = new HashMap<>();
 
-        // disk information
-        hal.getDiskStores().forEach(disk -> {
-            DiskInfo diskItem = new DiskInfo(disk.getName(), disk.getSize());
-            diskList.add(diskItem);
-        });
-
-        // Get all network interfaces
-        for (NetworkIF net : hal.getNetworkIFs()) {
-
-            // skipp if no network traffic is being received or sent
-            // this interface is down.
-            if (!net.isConnectorPresent()) {
-                continue;
-            }
-
-            net.updateAttributes();
-            long bytesReceived1 = net.getBytesRecv();
-            long bytesSent1 = net.getBytesSent();
-
-            Thread.sleep(1000);
-
-            net.updateAttributes();
-
-            long bytesReceived2 = net.getBytesRecv();
-            long bytesSent2 = net.getBytesSent();
-
-            long receivedPerSecond = bytesReceived2 - bytesReceived1;
-            long sentPerSecond = bytesSent2 - bytesSent1;
-
-            // bytes per second
-            netWorkInfo.add(new NetWorkInfo(net.getName(), sentPerSecond, receivedPerSecond));
-        }
-
-        result.put("CPU", hal.getProcessor());
-        result.put("OS", os.toString());
-        result.put("Memory", new MemoryInfo(hal.getMemory()));
-        result.put("Disk", diskList);
-        result.put("Network", netWorkInfo);
+        result.put("Memory", retrieveInformation.getMemoryInfo());
+        result.put("CPU", retrieveInformation.getCPULoad());
 
         return result;
     }
@@ -101,7 +62,12 @@ public class AjaxInfoInterface extends HttpServlet {
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String json = null;
 
-        json = objectMapper.writeValueAsString(newHandler());
+        String reason = request.getParameter("reason");
+
+        if (reason != null && reason.equals("main"))
+            json = objectMapper.writeValueAsString(handlerMain());
+        else
+            json = objectMapper.writeValueAsString(handlerOther());
 
         response.setContentType("application/json");
         response.getWriter().print(json);

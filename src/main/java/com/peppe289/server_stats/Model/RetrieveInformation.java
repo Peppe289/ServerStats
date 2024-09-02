@@ -35,6 +35,21 @@ public class RetrieveInformation {
         return hal.getComputerSystem().getFirmware().toString();
     }
 
+    // TODO: check this function. I don't like this implementation.
+    public double getCPULoad() {
+        CentralProcessor processor = hal.getProcessor();
+
+        long[] prevTicks = processor.getSystemCpuLoadTicks();
+        try {
+            // wait 1 second for get information about CPU load.
+            Thread.sleep(1000);
+        } catch (InterruptedException ignore) {
+            // ignore for now
+        }
+
+        return processor.getSystemCpuLoadBetweenTicks(prevTicks) * 100;
+    }
+
     public MemoryInfo getMemoryInfo() {
         return new MemoryInfo(hal.getMemory());
     }

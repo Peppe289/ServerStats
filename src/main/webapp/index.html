@@ -228,7 +228,7 @@
                 <div class="outer">
                     <div class="inner">
                         <div class="number">
-
+                            Not available
                         </div>
                     </div>
                 </div>
@@ -398,7 +398,7 @@
 
         // check if this interface already exist
         // we can check also for upload and download, but in this case I will check only for target_upload.
-        if (networkInfoTable.querySelector("#" + target+"_download")) {
+        if (networkInfoTable.querySelector("#" + target + "_download")) {
             const uploadTarget = networkInfoTable.querySelector("#" + target + "_upload");
             const downloadTarget = networkInfoTable.querySelector("#" + target + "_download");
 
@@ -452,40 +452,62 @@
         updateState("ramStats", percentage.toFixed(2));
     }
 
-    let lastPing;
+    function handleForCPULoad(cpu_obj) {
+        updateState("cpuStats", cpu_obj.toFixed(2));
+    }
 
-    function loadStats() {
-        const startTime = performance.now();
-        let endTime;
-
+    // delay of this request is 1 second (in server for pooling CPU load).
+    function loadMainInfo() {
         const request = new XMLHttpRequest();
-        request.open("GET", "http://localhost:8080/server_stats_war/info-api", true);
+        request.open("GET", "http://localhost:8080/server_stats_war/info-api?reason=main", true);
         request.onreadystatechange = function () {
             if (this.readyState === 4) {
-                endTime = performance.now();
-                lastPing = endTime - startTime;
-                console.log("Request time: " + (endTime - startTime) + "ms");
-
                 if (this.status === 200) {
                     const data = JSON.parse(this.response);
-                    handleForCPU(data["CPU"]);
-                    handleForNextwork(data["Network"]);
-                    handleForDisk(data["Disk"]);
                     handleForRAM(data["Memory"]);
+                    handleForCPULoad(data["CPU"]);
                 } else {
                     console.log("Error: " + this.status);
                 }
 
                 // set interval for next request.
                 // I don't want to use this recursion, but I can use only this (maybe).
-                loadStats();
+                loadMainInfo();
             }
         }
         request.send(null);
     }
 
-    // start pooling
-    loadStats();
+    // starting main info pooling.
+    loadMainInfo();
+
+    // this request will be recursive, so we can use this for pooling.
+    // this have delay in server for 1 * "network interface" second (at last 1). So, no interval is needed.
+    function loadOtherStats() {
+        const request = new XMLHttpRequest();
+        request.open("GET", "http://localhost:8080/server_stats_war/info-api", true);
+        request.onreadystatechange = function () {
+            if (this.readyState === 4) {
+                if (this.status === 200) {
+                    const data = JSON.parse(this.response);
+                    // this CPU means information, not include load.
+                    handleForCPU(data["CPU"]);
+                    handleForNextwork(data["Network"]);
+                    handleForDisk(data["Disk"]);
+                } else {
+                    console.log("Error: " + this.status);
+                }
+
+                // set interval for next request.
+                // I don't want to use this recursion, but I can use only this (maybe).
+                loadOtherStats();
+            }
+        }
+        request.send(null);
+    }
+
+    // start pooling for other stuff.
+    loadOtherStats();
 </script>
 
 </html>
