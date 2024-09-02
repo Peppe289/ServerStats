@@ -30,12 +30,23 @@
             box-sizing: border-box;
         }
 
-        ul#main-stats {
+        ul#main-stats,
+        ul#table-info {
             display: flex;
             justify-content: center;
             align-items: center;
             list-style: none;
             padding: 0;
+            margin: 20px auto;
+
+
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+
+        ul#main-stats li,
+        ul#table-info li {
+            margin: auto 30px;
         }
 
         li h2 {
@@ -45,14 +56,14 @@
         }
 
         div#server-stats {
-            margin: 0 auto;
             width: 80%;
-            height: 80%;
+            margin: 0 auto 10%;
             background-color: rgba(126, 126, 126, 0.1);
             border-radius: 20px;
             backdrop-filter: blur(30px);
             -webkit-backdrop-filter: blur(50px);
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
@@ -63,7 +74,6 @@
             width: 160px;
             height: 160px;
             position: relative;
-            margin: auto 30px;
         }
 
         .outer {
@@ -114,6 +124,49 @@
             top: 0;
             left: 0;
         }
+
+        table {
+            min-width: 200px;
+            max-width: 400px !important;
+            margin: 20px auto;
+            border-collapse: collapse;
+            color: #EAEAEA;
+            background-color: transparent;
+            box-shadow: 6px 6px 10px -1px rgba(207, 207, 207, 0.15), -6px -6px 10px -1px rgba(21, 21, 21, 0.7);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        th,
+        td {
+            padding: 12px 15px;
+            text-align: left;
+            max-width: 300px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        th {
+            background-color: #333;
+            font-size: 16px;
+            font-weight: bold;
+            color: #FFF;
+        }
+
+        tr {
+            border-bottom: 1px solid #555;
+        }
+
+        tr:last-child {
+            border-bottom: none;
+        }
+
+        td {
+            background-color: #444;
+            font-size: 14px;
+        }
+
     </style>
 
 </head>
@@ -193,6 +246,61 @@
         </li>
     </ul>
 
+    <ul id="table-info">
+        <li id="cpu-info">
+            <table>
+                <tr>
+                    <th>Model</th>
+                    <td id="cpu-model"></td>
+                </tr>
+                <tr>
+                    <th>Speed</th>
+                    <td id="cpu-max-freq"></td>
+                </tr>
+                <tr>
+                    <th>Cores</th>
+                    <td id="cpu-core"></td>
+                </tr>
+                <tr>
+                    <th>Threads</th>
+                    <td id="cpu-thread"></td>
+                </tr>
+            </table>
+        </li>
+        <li id="disk-info">
+            <table>
+                <tr>
+                    <!-- only from js like:
+                        <th class="diskName">Disk Name</th>
+                        <td class="sizeDisk"> occ / available GB </td>
+                    -->
+                </tr>
+            </table>
+        </li>
+
+        <li id="network-info">
+            <table>
+                <tr>
+                    <th>Network</th>
+                    <th>Upload</th>
+                    <th>Download</th>
+                </tr>
+                <!-- also here, only from js like:
+                    <tr>
+                        <td>ethernet_1</td>
+                        <td>43 KB/s</td>
+                        <td>0 KB/s</td>
+                    </tr>
+                    <tr>
+                        <td>ethernet_43</td>
+                        <td>35 KB/s</td>
+                        <td>0 KB/s</td>
+                    </tr>
+                -->
+            </table>
+        </li>
+    </ul>
+
 </div>
 
 </body>
@@ -204,34 +312,36 @@
         diskStats: 0
     };
 
-    function updateState(reason, target) {
+    /*************** Stats function ***************/
+
+    function updateState(target, value) {
         let counter = 0;
         let offset;
-        let oldValue = oldValueList[reason];
-        const cpuStats = document.getElementById(reason);
+        let oldValue = oldValueList[target];
+        const cpuStats = document.getElementById(target);
         const cpuStatsNumber = cpuStats.querySelector(".number");
         const circle = cpuStats.querySelector("circle");
 
         // check for integrity value
-        target = target > 100 ? 100 : target < 0 ? 0 : target;
+        value = value > 100 ? 100 : value < 0 ? 0 : value;
 
-        cpuStatsNumber.innerHTML = target + "%";
+        cpuStatsNumber.innerHTML = value + "%";
 
         counter = oldValue;
 
         function updateAnimation() {
-            if (counter === target) {
+            if (counter === value) {
                 // at finish animation, save this target for next animation on this div.
-                oldValueList[reason] = target;
+                oldValueList[target] = value;
                 return;
             }
 
             // check if is needed decrease or increase. (bcs we save older value)
-            counter = counter < target ? counter += 2 : counter -= 2;
+            counter = counter < value ? counter += 2 : counter -= 2;
 
             // check right range of value
-            if ((counter > target && oldValue < target) || (counter < target && oldValue > target)) {
-                counter = target;
+            if ((counter > value && oldValue < value) || (counter < value && oldValue > value)) {
+                counter = value;
             }
 
             // change offset when iterate value.
@@ -247,6 +357,45 @@
     updateState("cpuStats", 76);
     updateState("ramStats", 45);
     updateState("diskStats", 30);
+
+    /*************** CPU function ***************/
+
+    function setCPUInfo(target, value) {
+        const cpuInfo = document.getElementById("cpu-info");
+        const cpuInfoValue = cpuInfo.querySelector("#cpu-" + target);
+        cpuInfoValue.innerHTML = value;
+    }
+
+    setCPUInfo("model", "AMD Ryzen 5 3600");
+    setCPUInfo("max-freq", "4.2 GHz");
+    setCPUInfo("core", "6");
+    setCPUInfo("thread", "12");
+
+    /*************** Disk function ***************/
+
+    function setDiskInfo(target, value) {
+        const diskInfo = document.getElementById("disk-info");
+        const diskInfoTable = diskInfo.querySelector("table");
+
+        // in this case we need to create new row for each disk.
+        // but if we already have this disk, we can update it using ID in td (for this reason I will put target as id, like hashset).
+        const inner = "<tr><th class='diskName'>" + target + "</th><td class='sizeDisk' id='" + target + "'>" + value + "</td></tr>";
+        diskInfoTable.innerHTML += inner;
+    }
+
+    setDiskInfo("/dev/sda1", "130 / 400 GB");
+
+    /*************** Network function ***************/
+
+    function setNetworkInfo(target, upload, download) {
+        const networkInfo = document.getElementById("network-info");
+        const networkInfoTable = networkInfo.querySelector("table");
+
+        const inner = "<tr><td>" + target + "</td><td>" + upload + "</td><td>" + download + "</td></tr>";
+        networkInfoTable.innerHTML += inner;
+    }
+
+    setNetworkInfo("ethernet_32", 40 + " KB/s", 41 + " KB/s");
 </script>
 
 </html>
