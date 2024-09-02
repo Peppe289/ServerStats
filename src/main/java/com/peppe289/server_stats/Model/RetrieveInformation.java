@@ -2,9 +2,12 @@ package com.peppe289.server_stats.Model;
 
 import oshi.SystemInfo;
 import oshi.hardware.CentralProcessor;
+import oshi.hardware.HWDiskStore;
 import oshi.hardware.HardwareAbstractionLayer;
 import oshi.hardware.NetworkIF;
 import oshi.software.os.OperatingSystem;
+
+import java.util.List;
 
 public class RetrieveInformation {
     private final HardwareAbstractionLayer hal;
@@ -36,8 +39,8 @@ public class RetrieveInformation {
         return new MemoryInfo(hal.getMemory());
     }
 
-    public DiskInfo[] getDiskInfo() {
-        return hal.getDiskStores().stream().map(disk -> new DiskInfo(disk.getName(), disk.getSize())).toArray(DiskInfo[]::new);
+    public List<HWDiskStore> getDiskInfo() {
+        return hal.getDiskStores();
     }
 
     public NetWorkInfo[] getNetWorkInfo() {
