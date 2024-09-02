@@ -30,6 +30,20 @@
             box-sizing: border-box;
         }
 
+        ul#main-stats {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            list-style: none;
+            padding: 0;
+        }
+
+        li h2 {
+            width: 100%;
+            text-align: center;
+            margin: 20px 0;
+        }
+
         div#server-stats {
             margin: 0 auto;
             width: 80%;
@@ -108,65 +122,76 @@
 
 <div id="server-stats">
 
-    <div id="cpuStats" class="skill">
-        <div class="outer">
-            <div class="inner">
-                <div class="number">
+    <ul id="main-stats">
+        <li>
+            <h2>CPU Usage</h2>
+            <div id="cpuStats" class="skill">
+                <div class="outer">
+                    <div class="inner">
+                        <div class="number">
 
+                        </div>
+                    </div>
                 </div>
+
+                <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="160px" height="160px">
+                    <defs>
+                        <linearGradient id="GradientColorCPU">
+                            <stop offset="0%" stop-color="#c700b9"/>
+                            <stop offset="100%" stop-color="#8600fb"/>
+                        </linearGradient>
+                    </defs>
+                    <circle cx="80" cy="80" r="70" stroke-linecap="round"/>
+                </svg>
             </div>
-        </div>
+        </li>
 
-        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="160px" height="160px">
-            <defs>
-                <linearGradient id="GradientColorCPU">
-                    <stop offset="0%" stop-color="#c700b9"/>
-                    <stop offset="100%" stop-color="#8600fb"/>
-                </linearGradient>
-            </defs>
-            <circle cx="80" cy="80" r="70" stroke-linecap="round"/>
-        </svg>
-    </div>
+        <li>
+            <h2>RAM</h2>
+            <div id="ramStats" class="skill">
+                <div class="outer">
+                    <div class="inner">
+                        <div class="number">
 
-    <div id="ramStats" class="skill">
-        <div class="outer">
-            <div class="inner">
-                <div class="number">
-
+                        </div>
+                    </div>
                 </div>
+
+                <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="160px" height="160px">
+                    <defs>
+                        <linearGradient id="GradientColorRAM">
+                            <stop offset="0%" stop-color="#298dc1"/>
+                            <stop offset="100%" stop-color="#53ee3a"/>
+                        </linearGradient>
+                    </defs>
+                    <circle cx="80" cy="80" r="70" stroke-linecap="round"/>
+                </svg>
             </div>
-        </div>
+        </li>
 
-        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="160px" height="160px">
-            <defs>
-                <linearGradient id="GradientColorRAM">
-                    <stop offset="0%" stop-color="#298dc1"/>
-                    <stop offset="100%" stop-color="#53ee3a"/>
-                </linearGradient>
-            </defs>
-            <circle cx="80" cy="80" r="70" stroke-linecap="round"/>
-        </svg>
-    </div>
+        <li>
+            <h2>Disk Usage</h2>
+            <div id="diskStats" class="skill">
+                <div class="outer">
+                    <div class="inner">
+                        <div class="number">
 
-    <div id="diskStats" class="skill">
-        <div class="outer">
-            <div class="inner">
-                <div class="number">
-
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
 
-        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="160px" height="160px">
-            <defs>
-                <linearGradient id="GradientColorDisk">
-                    <stop offset="0%" stop-color="#c4d700"/>
-                    <stop offset="100%" stop-color="#da8e00"/>
-                </linearGradient>
-            </defs>
-            <circle cx="80" cy="80" r="70" stroke-linecap="round"/>
-        </svg>
-    </div>
+                <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="160px" height="160px">
+                    <defs>
+                        <linearGradient id="GradientColorDisk">
+                            <stop offset="0%" stop-color="#c4d700"/>
+                            <stop offset="100%" stop-color="#da8e00"/>
+                        </linearGradient>
+                    </defs>
+                    <circle cx="80" cy="80" r="70" stroke-linecap="round"/>
+                </svg>
+            </div>
+        </li>
+    </ul>
 
 </div>
 
@@ -194,8 +219,7 @@
 
         counter = oldValue;
 
-        function updateAnimation()
-        {
+        function updateAnimation() {
             if (counter === target) {
                 // at finish animation, save this target for next animation on this div.
                 oldValueList[reason] = target;
