@@ -105,6 +105,7 @@ public class AjaxInfoInterface extends HttpServlet {
 
         response.setContentType("application/json");
         response.getWriter().print(json);
+        response.getWriter().flush();
     }
 
     public void destroy() {

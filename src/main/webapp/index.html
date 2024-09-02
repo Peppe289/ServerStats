@@ -366,10 +366,10 @@
         cpuInfoValue.innerHTML = value;
     }
 
-    setCPUInfo("model", "AMD Ryzen 5 3600");
-    setCPUInfo("max-freq", "4.2 GHz");
-    setCPUInfo("core", "6");
-    setCPUInfo("thread", "12");
+    //setCPUInfo("model", "AMD Ryzen 5 3600");
+    //setCPUInfo("max-freq", "4.2 GHz");
+    //setCPUInfo("core", "6");
+    //setCPUInfo("thread", "12");
 
     /*************** Disk function ***************/
 
@@ -377,13 +377,18 @@
         const diskInfo = document.getElementById("disk-info");
         const diskInfoTable = diskInfo.querySelector("table");
 
-        // in this case we need to create new row for each disk.
-        // but if we already have this disk, we can update it using ID in td (for this reason I will put target as id, like hashset).
-        const inner = "<tr><th class='diskName'>" + target + "</th><td class='sizeDisk' id='" + target + "'>" + value + "</td></tr>";
-        diskInfoTable.innerHTML += inner;
+        if (diskInfoTable.innerHTML.indexOf(" " + target + " ") !== -1) {
+            const diskTarget = diskInfoTable.querySelector("input").parentElement.querySelector(".sizeDisk");
+            diskTarget.innerHTML = value;
+        } else {
+            // in this case we need to create new row for each disk.
+            // but if we already have this disk, we can update it using ID in td (for this reason I will put target as id, like hashset).
+            const inner = "<tr><th class='diskName'>" + target + "</th><input type='hidden' value=' " + target + " '><td class='sizeDisk' id='" + target + "'>" + value + "</td></tr>";
+            diskInfoTable.innerHTML += inner;
+        }
     }
 
-    setDiskInfo("/dev/sda1", "130 / 400 GB");
+    //setDiskInfo("/dev/sda1", "130 / 400 GB");
 
     /*************** Network function ***************/
 
@@ -391,11 +396,89 @@
         const networkInfo = document.getElementById("network-info");
         const networkInfoTable = networkInfo.querySelector("table");
 
-        const inner = "<tr><td>" + target + "</td><td>" + upload + "</td><td>" + download + "</td></tr>";
-        networkInfoTable.innerHTML += inner;
+        // check if this interface already exist
+        // we can check also for upload and download, but in this case I will check only for target_upload.
+        if (networkInfoTable.querySelector("#" + target+"_download")) {
+            const uploadTarget = networkInfoTable.querySelector("#" + target + "_upload");
+            const downloadTarget = networkInfoTable.querySelector("#" + target + "_download");
+
+            uploadTarget.innerHTML = upload;
+            downloadTarget.innerHTML = download;
+        } else {
+            const inner = "<tr><td> " + target + " </td><td id='" + target + "_upload'>" + upload + "</td><td id='" + target + "_download'>" + download + "</td></tr>";
+            networkInfoTable.innerHTML += inner;
+        }
     }
 
-    setNetworkInfo("ethernet_32", 40 + " KB/s", 41 + " KB/s");
+    //setNetworkInfo("ethernet_32", 40 + " KB/s", 41 + " KB/s");
+    //setNetworkInfo("ethernet_32", 40 + " KB/s", 4531 + " KB/s");
+    //setNetworkInfo("ethernet_3", 40 + " KB/s", 1 + " KB/s");
+
+    /*************** Ajax request ***************/
+
+    function handleForCPU(cpu_obj) {
+        setCPUInfo("model", cpu_obj["processorIdentifier"]["name"]);
+        // convert from Hz to GHz
+        setCPUInfo("max-freq", cpu_obj["maxFreq"] / 1000000000 + " GHz");
+        setCPUInfo("core", cpu_obj["physicalProcessorCount"]);
+        setCPUInfo("thread", cpu_obj["logicalProcessorCount"]);
+    }
+
+    function formatSpeed(speedInKB) {
+        if (speedInKB >= 1024) {
+            return (speedInKB / 1024).toFixed(2) + " MB/s";
+        }
+        return speedInKB.toFixed(2) + " KB/s";
+    }
+
+    function handleForNextwork(net_obj) {
+        for (let key in net_obj) {
+            const send_kb = net_obj[key]["bytesSent"] / 1024;
+            const receive_kb = net_obj[key]["bytesReceived"] / 1024;
+            setNetworkInfo(net_obj[key]["name"], formatSpeed(send_kb), formatSpeed(receive_kb));
+        }
+    }
+
+    function handleForDisk(disk_obj) {
+        for (let key in disk_obj) {
+            const size = disk_obj[key]["size"] / 1024 / 1024 / 1024;
+            setDiskInfo(disk_obj[key]["name"], size.toFixed(2) + " GB");
+        }
+    }
+
+    let lastPing;
+
+    function loadStats() {
+        const startTime = performance.now();
+        let endTime;
+
+        const request = new XMLHttpRequest();
+        request.open("GET", "http://localhost:8080/server_stats_war/info-api", true);
+        request.onreadystatechange = function () {
+            if (this.readyState === 4) {
+                endTime = performance.now();
+                lastPing = endTime - startTime;
+                console.log("Request time: " + (endTime - startTime) + "ms");
+
+                if (this.status === 200) {
+                    const data = JSON.parse(this.response);
+                    handleForCPU(data["CPU"]);
+                    handleForNextwork(data["Network"]);
+                    handleForDisk(data["Disk"]);
+                } else {
+                    console.log("Error: " + this.status);
+                }
+
+                // set interval for next request.
+                // I don't want to use this recursion, but I can use only this (maybe).
+                loadStats();
+            }
+        }
+        request.send(null);
+    }
+
+    // start pooling
+    loadStats();
 </script>
 
 </html>
