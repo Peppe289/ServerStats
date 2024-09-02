@@ -459,7 +459,7 @@
     // delay of this request is 1 second (in server for pooling CPU load).
     function loadMainInfo() {
         const request = new XMLHttpRequest();
-        request.open("GET", "http://localhost:8080/server_stats_war/info-api?reason=main", true);
+        request.open("GET", "info-api?reason=main", true);
         request.onreadystatechange = function () {
             if (this.readyState === 4) {
                 if (this.status === 200) {
@@ -485,7 +485,7 @@
     // this have delay in server for 1 * "network interface" second (at last 1). So, no interval is needed.
     function loadOtherStats() {
         const request = new XMLHttpRequest();
-        request.open("GET", "http://localhost:8080/server_stats_war/info-api", true);
+        request.open("GET", "info-api", true);
         request.onreadystatechange = function () {
             if (this.readyState === 4) {
                 if (this.status === 200) {
