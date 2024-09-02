@@ -305,7 +305,7 @@
 
 </body>
 
-<script>
+<script defer>
     let oldValueList = {
         cpuStats: 0,
         ramStats: 0,
@@ -354,9 +354,9 @@
         updateAnimation();
     }
 
-    updateState("cpuStats", 76);
-    updateState("ramStats", 45);
-    updateState("diskStats", 30);
+    //updateState("cpuStats", 76);
+    //updateState("ramStats", 45);
+    //updateState("diskStats", 30);
 
     /*************** CPU function ***************/
 
@@ -446,6 +446,12 @@
         }
     }
 
+    function handleForRAM(ram_obj) {
+        const used = ram_obj["physicalMemorySize"] - ram_obj["freePhysicalMemory"];
+        const percentage = used / ram_obj["physicalMemorySize"] * 100;
+        updateState("ramStats", percentage.toFixed(2));
+    }
+
     let lastPing;
 
     function loadStats() {
@@ -465,6 +471,7 @@
                     handleForCPU(data["CPU"]);
                     handleForNextwork(data["Network"]);
                     handleForDisk(data["Disk"]);
+                    handleForRAM(data["Memory"]);
                 } else {
                     console.log("Error: " + this.status);
                 }
