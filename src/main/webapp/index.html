@@ -112,6 +112,73 @@
             stroke: url(#GradientColorDisk);
         }
 
+        /* change text on over mouse in main stats */
+        #main-stats li .skill:hover .number {
+            display: none;
+        }
+
+        #main-stats li .skill:hover .text {
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+            justify-content: center;
+        }
+
+        #main-stats .text button {
+            position: absolute;
+            z-index: 2;
+            width: 90px;
+            height: 90px;
+            left: 35px;
+            right: 35px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 3px 3px 2px -1px rgba(255, 255, 255, 0.15), -3px -3px 2px -1px rgba(21, 21, 21, 0.7);
+        }
+
+        #main-stats .text {
+            display: none;
+        }
+
+        #main-stats .text span:nth-child(1),
+        #main-stats .text span:nth-child(3) {
+            font-size: 18px;
+            font-weight: 400;
+        }
+
+        #main-stats .text span:nth-child(2) {
+            font-size: 25px;
+            font-weight: 600;
+        }
+
+        #popup-frequency {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #popup-frequency button {
+            background-color: #333;
+            width: 190px;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        /*******************************************/
+
         circle {
             fill: none;
             stroke-width: 20px;
@@ -126,8 +193,6 @@
         }
 
         table {
-            min-width: 200px;
-            max-width: 400px !important;
             margin: 20px auto;
             border-collapse: collapse;
             color: #EAEAEA;
@@ -135,6 +200,11 @@
             box-shadow: 6px 6px 10px -1px rgba(207, 207, 207, 0.15), -6px -6px 10px -1px rgba(21, 21, 21, 0.7);
             border-radius: 20px;
             overflow: hidden;
+        }
+
+        #table-info table {
+            min-width: 200px;
+            max-width: 400px !important;
         }
 
         th,
@@ -173,6 +243,15 @@
 <body>
 <h1 id="title">Server Stats</h1>
 
+<div id="popup-frequency">
+    <div style="display: flex; flex-direction: column">
+        <button onclick="cpuStatsPopUp()">Close</button>
+        <table>
+
+        </table>
+    </div>
+</div>
+
 <div id="server-stats">
 
     <ul id="main-stats">
@@ -181,6 +260,9 @@
             <div id="cpuStats" class="skill">
                 <div class="outer">
                     <div class="inner">
+                        <div class="text">
+                            <button onclick="cpuStatsPopUp()">Frequency</button>
+                        </div>
                         <div class="number">
 
                         </div>
@@ -204,6 +286,11 @@
             <div id="ramStats" class="skill">
                 <div class="outer">
                     <div class="inner">
+                        <div class="text">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
                         <div class="number">
 
                         </div>
@@ -416,12 +503,39 @@
 
     /*************** Ajax request ***************/
 
+    function updateFrequencyTable(cpu_obj) {
+        const cpuPopUp = document.getElementById("popup-frequency");
+        const cpuPopUpTable = cpuPopUp.getElementsByTagName("table")[0];
+        const arrayFrequency = Array.from(cpu_obj["currentFreq"]);
+        for (let i = 0; i < arrayFrequency.length; ++i) {
+            // if we have this thread, update it.
+            // if not, create new row.
+            // check this with undefined error. (if we have this thread, we can't get undefined error)
+            // please tell me better solution for this. HELP!
+            try {
+                const tr = cpuPopUpTable.getElementsByTagName("tr")[i];
+                const td = tr.getElementsByTagName("td")[0];
+                td.innerHTML = arrayFrequency[i] / 1000000 + " MHz";
+            } catch (e) {
+                const tr = document.createElement("tr");
+                const th = document.createElement("th");
+                const td = document.createElement("td");
+                th.innerHTML = "Thread " + i;
+                td.innerHTML = arrayFrequency[i] / 1000000 + " GHz";
+                tr.appendChild(th);
+                tr.appendChild(td);
+                cpuPopUpTable.appendChild(tr);
+            }
+        }
+    }
+
     function handleForCPU(cpu_obj) {
         setCPUInfo("model", cpu_obj["processorIdentifier"]["name"]);
         // convert from Hz to GHz
         setCPUInfo("max-freq", cpu_obj["maxFreq"] / 1000000000 + " GHz");
         setCPUInfo("core", cpu_obj["physicalProcessorCount"]);
         setCPUInfo("thread", cpu_obj["logicalProcessorCount"]);
+        updateFrequencyTable(cpu_obj);
     }
 
     function formatSpeed(speedInKB) {
@@ -446,10 +560,33 @@
         }
     }
 
+    function setHoverTextRam(total, used) {
+        const ramStats = document.getElementById("ramStats");
+        const spanText = ramStats.getElementsByTagName("span");
+        const usedDiv = spanText[0];
+        const totalDiv = spanText[1];
+        const unity = spanText[2];
+
+        // measured in MB if is than 1024 then convert in GB
+        if (total >= 1024) {
+            // from MB to GB
+            usedDiv.innerHTML = (used / 1024).toFixed(2);
+            totalDiv.innerHTML = (total / 1024).toFixed(2);
+            unity.innerHTML = "GB";
+        } else {
+            // keep in MB
+            usedDiv.innerHTML = used.toFixed(2);
+            totalDiv.innerHTML = total.toFixed(2);
+            unity.innerHTML = "MB";
+        }
+    }
+
     function handleForRAM(ram_obj) {
         const used = ram_obj["physicalMemorySize"] - ram_obj["freePhysicalMemory"];
         const percentage = used / ram_obj["physicalMemorySize"] * 100;
         updateState("ramStats", percentage.toFixed(2));
+        // in MB
+        setHoverTextRam(ram_obj["physicalMemorySize"], used);
     }
 
     function handleForCPULoad(cpu_obj) {
@@ -508,6 +645,19 @@
 
     // start pooling for other stuff.
     loadOtherStats();
+
+    /************** User Interface function *****************/
+    function cpuStatsPopUp() {
+        const display = "flex";
+        const cpuPopUp = document.getElementById("popup-frequency");
+        let isOpen = cpuPopUp.style.display.toString().indexOf(display) !== -1;
+
+        if (isOpen) {
+            cpuPopUp.style.display = "none";
+        } else {
+            cpuPopUp.style.display = display;
+        }
+    }
 </script>
 
 </html>
