@@ -405,14 +405,17 @@
         let counter = 0;
         let offset;
         let oldValue = oldValueList[target];
-        const cpuStats = document.getElementById(target);
-        const cpuStatsNumber = cpuStats.querySelector(".number");
-        const circle = cpuStats.querySelector("circle");
+        let targetElement = document.getElementById(target);
+        let targetNumberEl = targetElement.querySelector(".number");
+        let circle = targetElement.querySelector("circle");
+
+        // I hate js. This fix stuck animation.
+        value = parseFloat(value);
 
         // check for integrity value
         value = value > 100 ? 100 : value < 0 ? 0 : value;
 
-        cpuStatsNumber.innerHTML = value + "%";
+        targetNumberEl.innerHTML = value + "%";
 
         counter = oldValue;
 
