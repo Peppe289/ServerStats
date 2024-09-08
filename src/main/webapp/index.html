@@ -465,7 +465,8 @@
         const diskInfoTable = diskInfo.querySelector("table");
 
         if (diskInfoTable.innerHTML.indexOf(" " + target + " ") !== -1) {
-            const diskTarget = diskInfoTable.querySelector("input").parentElement.querySelector(".sizeDisk");
+            // this should be like "/dev/sdX". We should not use this tag for other document element.
+            const diskTarget = document.getElementById(target);
             diskTarget.innerHTML = value;
         } else {
             // in this case we need to create new row for each disk.
