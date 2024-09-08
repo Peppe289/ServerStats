@@ -7,6 +7,8 @@ import oshi.hardware.HardwareAbstractionLayer;
 import oshi.hardware.NetworkIF;
 import oshi.software.os.OperatingSystem;
 
+import java.io.File;
+import java.util.HashMap;
 import java.util.List;
 
 public class RetrieveInformation {
@@ -86,5 +88,20 @@ public class RetrieveInformation {
 
                     return new NetWorkInfo(net.getName(), sentPerSecond, receivedPerSecond);
                 }).toArray(NetWorkInfo[]::new);
+    }
+
+    public List<HashMap<String, Object>> getDiskSpace() {
+        List<HashMap<String, Object>> disksSpace = new java.util.ArrayList<>();
+        // Check all disk
+        File[] roots = File.listRoots();
+        for (File root : roots) {
+            HashMap<String, Object> disk = new HashMap<>();
+            disk.put("root", root.getAbsolutePath());
+            disk.put("total", root.getTotalSpace() /  (1024.0 * 1024.0));
+            disk.put("free", root.getFreeSpace() / (1024.0 * 1024.0));
+            disksSpace.add(disk);
+        }
+
+        return disksSpace;
     }
 }

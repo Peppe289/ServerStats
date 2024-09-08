@@ -1,9 +1,6 @@
 package com.peppe289.server_stats.Controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.peppe289.server_stats.Model.DiskInfo;
-import com.peppe289.server_stats.Model.MemoryInfo;
-import com.peppe289.server_stats.Model.NetWorkInfo;
 import com.peppe289.server_stats.Model.RetrieveInformation;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -11,13 +8,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import oshi.SystemInfo;
 import oshi.hardware.HardwareAbstractionLayer;
-import oshi.hardware.NetworkIF;
 import oshi.software.os.OperatingSystem;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 @WebServlet(name = "info-api", value = "/info-api")
 public class AjaxInfoInterface extends HttpServlet {
@@ -55,6 +49,7 @@ public class AjaxInfoInterface extends HttpServlet {
 
         result.put("Memory", retrieveInformation.getMemoryInfo());
         result.put("CPU", retrieveInformation.getCPULoad());
+        result.put("DiskSpace", retrieveInformation.getDiskSpace());
 
         return result;
     }

@@ -314,8 +314,13 @@
             <div id="diskStats" class="skill">
                 <div class="outer">
                     <div class="inner">
+                        <div class="text">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
                         <div class="number">
-                            Not available
+
                         </div>
                     </div>
                 </div>
@@ -564,15 +569,22 @@
         }
     }
 
-    function setHoverTextRam(total, used) {
-        const ramStats = document.getElementById("ramStats");
+    // in main panel we have hover text, so we need to set this text.
+    // for now whe use this only for RAM and for DiskUsage.
+    function setSizeTextOver(id, total, used) {
+        const ramStats = document.getElementById(id);
         const spanText = ramStats.getElementsByTagName("span");
         const usedDiv = spanText[0];
         const totalDiv = spanText[1];
         const unity = spanText[2];
 
         // measured in MB if is than 1024 then convert in GB
-        if (total >= 1024) {
+        if (total >= (1024 * 1024)) {
+            // from MB to TB
+            usedDiv.innerHTML = (used / (1024 * 1024)).toFixed(2);
+            totalDiv.innerHTML = (total / (1024 * 1024)).toFixed(2);
+            unity.innerHTML = "TB";
+        } else if (total >= 1024) {
             // from MB to GB
             usedDiv.innerHTML = (used / 1024).toFixed(2);
             totalDiv.innerHTML = (total / 1024).toFixed(2);
@@ -590,11 +602,26 @@
         const percentage = used / ram_obj["physicalMemorySize"] * 100;
         updateState("ramStats", percentage.toFixed(2));
         // in MB
-        setHoverTextRam(ram_obj["physicalMemorySize"], used);
+        setSizeTextOver("ramStats", ram_obj["physicalMemorySize"], used);
     }
 
     function handleForCPULoad(cpu_obj) {
         updateState("cpuStats", cpu_obj.toFixed(2));
+    }
+
+    function handleForDiskUsage(disk_obj) {
+        const arr = Array.from(disk_obj);
+        let totalDisk = 0;
+        let freeDisk = 0;
+        let freePercentage;
+        arr.forEach((el) => {
+            totalDisk += el["total"];
+            freeDisk += el["free"];
+        });
+
+        freePercentage = freeDisk / totalDisk * 100;
+        setSizeTextOver("diskStats", totalDisk, totalDisk - freeDisk);
+        updateState("diskStats", (100 - freePercentage).toFixed(2));
     }
 
     // delay of this request is 1 second (in server for pooling CPU load).
@@ -607,6 +634,7 @@
                     const data = JSON.parse(this.response);
                     handleForRAM(data["Memory"]);
                     handleForCPULoad(data["CPU"]);
+                    handleForDiskUsage(data["DiskSpace"]);
                 } else {
                     console.log("Error: " + this.status);
                 }
